@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Free Fire Preferred Drop Spots Generator</title>
+  <!-- html2canvas for exporting final graphic -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Rajdhani:wght@600;700&display=swap');
+
+    :root {
+      --bg-color: #0b0d10;
+      --panel-bg: #14181d;
+      --accent-copper: #d88351;
+      --accent-gold: #ffaa00;
+      --grid-line: rgba(216, 131, 81, 0.25);
+      --font-teko: 'Teko', sans-serif;
+      --font-rajdhani: 'Rajdhani', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: #fff;
+      font-family: var(--font-rajdhani);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Top Controls Bar */
+    .controls-bar {
+      width: 1000px;
+      max-width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-bg);
+      padding: 12px 20px;
+      margin-bottom: 15px;
+      border: 1px solid var(--accent-copper);
+      border-radius: 4px;
+    }
+
+    .controls-bar label {
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      font-size: 16px;
+    }
+
+    select, input[type="text"], button {
+      background: #1e242c;
+      border: 1px solid var(--accent-copper);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 3px;
+      outline: none;
+      font-family: var(--font-rajdhani);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    button {
+      background: var(--accent-copper);
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--accent-gold);
+    }
+
+    /* Graphic Template Frame */
+    .template-card {
+      width: 1000px;
+      height: 650px;
+      background: radial-gradient(circle at center, #171c24 0%, #080a0d 100%);
+      border: 2px solid #28303c;
+      position: relative;
+      display: flex;
+      padding: 20px;
+      box-shadow: 0 0 35px rgba(0,0,0,0.9);
+      overflow: hidden;
+    }
+
+    /* Left Side: Free Fire Map Display */
+    .map-section {
+      width: 550px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-container {
+      width: 550px;
+      height: 550px;
+      border: 2px solid var(--accent-copper);
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Coordinate Grid Overlay (A-J, 1-10) */
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      pointer-events: none;
+    }
+
+    .grid-cell {
+      border-right: 1px solid var(--grid-line);
+      border-bottom: 1px solid var(--grid-line);
+    }
+
+    .col-labels {
+      position: absolute;
+      top: 2px;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      font-size: 11px;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+    }
+
+    .row-labels {
+      position: absolute;
+      left: 4px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      font-size: 11px;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+    }
+
+    /* Footer Metadata */
+    .map-footer {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 10px;
+      font-size: 18px;
+      font-family: var(--font-teko);
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+    }
+
+    .map-footer input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--accent-copper);
+      border-radius: 0;
+      color: #fff;
+      font-family: var(--font-teko);
+      font-size: 20px;
+    }
+
+    /* Right Side: Header & 12 Teams Grid */
+    .info-section {
+      flex: 1;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title {
+      text-transform: uppercase;
+      font-family: var(--font-teko);
+    }
+
+    .header-title h1 {
+      font-size: 48px;
+      letter-spacing: 2px;
+      color: #fff;
+      line-height: 0.85;
+      font-style: italic;
+    }
+
+    .header-title h2 {
+      font-size: 56px;
+      color: var(--accent-copper);
+      line-height: 0.85;
+      font-style: italic;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    .sub-banner {
+      background: linear-gradient(90deg, var(--accent-copper) 0%, transparent 100%);
+      color: #000;
+      font-weight: 700;
+      font-style: italic;
+      padding: 2px 12px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      display: inline-block;
+      width: fit-content;
+      letter-spacing: 2px;
+      font-size: 13px;
+    }
+
+    /* 12 Free Fire Team Slots */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      flex: 1;
+    }
+
+    .team-card {
+      background: #10141a;
+      border: 1px solid rgba(216, 131, 81, 0.35);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .team-card:hover, .team-card.active {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 12px rgba(255, 170, 0, 0.4);
+    }
+
+    .team-card.active::after {
+      content: 'PINNING MODE';
+      position: absolute;
+      top: -8px;
+      background: var(--accent-gold);
+      color: #000;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .logo-box {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .logo-box .placeholder-icon {
+      font-size: 18px;
+      color: #777;
+    }
+
+    .team-name-input {
+      width: 100%;
+      margin-top: 4px;
+      font-size: 11px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #333;
+      color: #fff;
+    }
+
+    .team-name-input:focus {
+      border-bottom-color: var(--accent-copper);
+    }
+
+    /* Circular Drop Pin on Free Fire Map */
+    .drop-pin {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 8px var(--accent-gold);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+      background-size: cover;
+      background-position: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div>
+      <label>Free Fire Map: </label>
+      <select id="mapSelect" onchange="changeMap(this.value)">
+        <option value="bermuda">Bermuda</option>
+        <option value="purgatory">Purgatory</option>
+        <option value="kalahari">Kalahari</option>
+        <option value="alpine">Alpine</option>
+        <option value="nexterra">NeXTerra</option>
+      </select>
+      <input type="file" id="customMapInput" accept="image/*" style="display:none;" onchange="loadCustomMap(event)">
+      <button onclick="document.getElementById('customMapInput').click()">Upload Custom Map Image</button>
+    </div>
+    <button onclick="exportGraphic()">Export High Quality Graphic</button>
+  </div>
+
+  <!-- Main Esports Graphic Template -->
+  <div class="template-card" id="templateCard">
+
+    <!-- Map Section -->
+    <div class="map-section">
+      <div class="map-container" id="mapContainer" onclick="placePin(event)">
+        <!-- Grid overlay -->
+        <div class="grid-overlay" id="gridOverlay"></div>
+
+        <!-- Column Letters (A-J) -->
+        <div class="col-labels">
+          <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+          <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+        </div>
+        <!-- Row Numbers (1-10) -->
+        <div class="row-labels">
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        </div>
+      </div>
+
+      <!-- Footer Info Bar -->
+      <div class="map-footer">
+        <div>MAP: <input type="text" id="mapNameDisplay" value="BERMUDA" style="width:110px;"></div>
+        <div>| GAME: <input type="text" value="MATCH 1" style="width:110px;"></div>
+      </div>
+    </div>
+
+    <!-- Right Side: Teams Info & Drop Grid -->
+    <div class="info-section">
+      <div class="header-title">
+        <h1>PREFERRED</h1>
+        <h2>DROP SPOTS</h2>
+      </div>
+      <div class="sub-banner">
+        // FREE FIRE MATCH DAY
+      </div>
+
+      <!-- 12 Teams Grid for Free Fire -->
+      <div class="teams-grid" id="teamsGrid"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Free Fire Preset Maps (Replace URLs with high-res map images if hosted locally)
+    const presetMaps = {
+      bermuda: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
+      purgatory: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+      kalahari: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',
+      alpine: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+      nexterra: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80'
+    };
+
+    let activeTeamIndex = null;
+    const teamsData = Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      name: `TEAM ${i + 1}`,
+      logo: '',
+      pin: null
+    }));
+
+    window.onload = () => {
+      setupGrid();
+      renderTeams();
+      changeMap('bermuda');
+    };
+
+    function setupGrid() {
+      const grid = document.getElementById('gridOverlay');
+      grid.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        grid.appendChild(cell);
+      }
+    }
+
+    function changeMap(mapKey) {
+      const container = document.getElementById('mapContainer');
+      const mapNameInput = document.getElementById('mapNameDisplay');
+      if (presetMaps[mapKey]) {
+        container.style.backgroundImage = `url('${presetMaps[mapKey]}')`;
+        mapNameInput.value = mapKey.toUpperCase();
+      }
+    }
+
+    function loadCustomMap(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('mapContainer').style.backgroundImage = `url('${e.target.result}')`;
+          document.getElementById('mapNameDisplay').value = "CUSTOM MAP";
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderTeams() {
+      const grid = document.getElementById('teamsGrid');
+      grid.innerHTML = '';
+
+      teamsData.forEach((team, idx) => {
+        const card = document.createElement('div');
+        card.className = `team-card ${activeTeamIndex === idx ? 'active' : ''}`;
+        card.onclick = (e) => selectTeam(idx, e);
+
+        const logoBox = document.createElement('div');
+        logoBox.className = 'logo-box';
+        logoBox.onclick = (e) => {
+          e.stopPropagation();
+          triggerLogoUpload(idx);
+        };
+
+        if (team.logo) {
+          logoBox.innerHTML = `<img src="${team.logo}" alt="logo">`;
+        } else {
+          logoBox.innerHTML = `<span class="placeholder-icon">+</span>`;
+        }
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'team-name-input';
+        input.value = team.name;
+        input.onchange = (e) => { team.name = e.target.value; };
+        input.onclick = (e) => e.stopPropagation();
+
+        card.appendChild(logoBox);
+        card.appendChild(input);
+        grid.appendChild(card);
+      });
+    }
+
+    function triggerLogoUpload(index) {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            teamsData[index].logo = event.target.result;
+            renderTeams();
+            updatePins();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      fileInput.click();
+    }
+
+    function selectTeam(index, event) {
+      activeTeamIndex = activeTeamIndex === index ? null : index;
+      renderTeams();
+    }
+
+    function placePin(event) {
+      if (activeTeamIndex === null) return;
+
+      const mapRect = document.getElementById('mapContainer').getBoundingClientRect();
+      const xPercent = ((event.clientX - mapRect.left) / mapRect.width) * 100;
+      const yPercent = ((event.clientY - mapRect.top) / mapRect.height) * 100;
+
+      teamsData[activeTeamIndex].pin = { x: xPercent, y: yPercent };
+      updatePins();
+    }
+
+    function updatePins() {
+      const container = document.getElementById('mapContainer');
+      document.querySelectorAll('.drop-pin').forEach(pin => pin.remove());
+
+      teamsData.forEach((team) => {
+        if (team.pin && team.logo) {
+          const pinEl = document.createElement('div');
+          pinEl.className = 'drop-pin';
+          pinEl.style.left = `${team.pin.x}%`;
+          pinEl.style.top = `${team.pin.y}%`;
+          pinEl.style.backgroundImage = `url('${team.logo}')`;
+          pinEl.title = `${team.name} (Right-click to remove)`;
+
+          pinEl.oncontextmenu = (e) => {
+            e.preventDefault();
+            team.pin = null;
+            updatePins();
+          };
+
+          container.appendChild(pinEl);
+        }
+      });
+    }
+
+    function exportGraphic() {
+      const template = document.getElementById('templateCard');
+      html2canvas(template, { useCORS: true, scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'freefire-preferred-drop-spots.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
